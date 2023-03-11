@@ -1,0 +1,10 @@
+pandas
+fredapi
+kaleido
+plotly
+arrow
+pyTelegramBotAPI
+python-dotenv
+tabulate
+pyarrow
+fastparquet

@@ -1,0 +1,12 @@
+Dockerfile
+README.md
+notes.txt
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+.pytest_cache
+Scripts
+Lib
+pyvenv.cfg
+requirements.txt
