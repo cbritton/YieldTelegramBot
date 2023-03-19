@@ -6,3 +6,4 @@ This is a simple Telegram bot that responds to the following commands:
 - curve  - shows the yield curve on the most recent rates
 
 ![](./media/table.jpg =100x20)
+<img src="./media/table.jpg" width="150" height="280">
