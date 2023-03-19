@@ -12,13 +12,14 @@ Example response for the table:
 
 Example response for the yield curve:
 
-<img src="./media/curve.jpg" width="25%">
+<img src="./media/graph.jpg" width="25%">
 
 ## Setup
 
 To set this up, you will need a telegram bot key and a Fred API key (https://fred.stlouisfed.org/docs/api/fred/).  Add these to the .env file.  
 
 On windows, create a virtual environment and install the packages:
+
 `
 pip install -r requirement.txt
 `
