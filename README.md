@@ -5,4 +5,4 @@ This is a simple Telegram bot that responds to the following commands:
 - yield  - this returns a table of the most recent yield rates
 - curve  - shows the yield curve on the most recent rates
 
-![Yield Table](media/table.jpg =100x20)
+![](media/table.jpg =100x20)
