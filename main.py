@@ -1,14 +1,79 @@
 import os
-import arrow
+import uuid
 import telebot
-import plotly.graph_objects as go
 import os.path 
 from common import get_yields_data
+from common import create_figure
+from common import shorthand_names
+from common import get_yield_spread
+from common import create_spread_figure
 from config import data_content
 from config import telegram_bot_key
 
 
 bot = telebot.TeleBot(telegram_bot_key)
+
+def map_request_to_fred_key(request):
+    # Xm -> DSGXMO
+    # Zy -> DSGZ
+    id = None
+    if "m" in request.lower():
+        id = f"DGS{request.lower().split('m')[0]}MO"
+    elif "y" in request.lower():
+        id = f"DGS{request.lower().split('y')[0]}"
+    return id
+
+@bot.message_handler(commands=["spread"])
+def yield_spread_handeler(message):
+    request = message.text.split()
+    # format should be: /comapre X Y # where # is the number of months back in time to get, default is 12
+    if len(request) < 3:
+        response = f"Incomplete request. Format: '/spread X Y N' where X and Y are one of {','.join(shorthand_names)} an N is the number of months as a number."
+        bot.send_message( message.chat.id, response)
+    else:
+        first = request[1]
+        second = request[2]
+        months = 12
+        done = False
+        if len(request) >= 4:
+            months = request[3]
+            try:
+                months = abs(int(months))
+            except:
+                response = f"Month value is not understood: '{request[3]}'"
+                bot.send_message( message.chat.id, response)
+                done = True
+        if first.lower() == second.lower():
+            response = "Please enter 2 different maturities"
+            bot.send_message( message.chat.id, response)
+            return
+        # first and second must be one of the shorthand names
+        if first.lower() not in shorthand_names:
+            response = f"Unknown value: '{first}'"
+            bot.send_message( message.chat.id, response)
+            done = True
+        if second.lower() not in shorthand_names:
+            response = f"Unknown value: '{second}'"
+            bot.send_message( message.chat.id, response)
+            done = True
+        if not done:
+            # get the fred id from the first and second parameter
+            first_id = map_request_to_fred_key(first)
+            second_id = map_request_to_fred_key(second)
+            # get the fred data for both
+            df = get_yield_spread(first_id, second_id, months)
+            # plot the curve
+            fig = create_spread_figure(df, first, second)
+
+            # save the figrue to a file
+            tmp_filename = f"images/spread_{first}_{second}_{str(uuid.uuid4())}.png"
+
+            fig.write_image(tmp_filename)
+
+            # return the figure
+            figure = open(tmp_filename, 'rb')
+            bot.send_photo(message.chat.id, figure)
+
 
 @bot.message_handler(commands=["yield"])
 def get_yields(message):
@@ -30,37 +95,11 @@ def get_curve(message):
     # get the data and update indicator
     data, update = get_yields_data(data_content)
 
-    # if the file does not exist, create it and save it
-    if update or not os.path.exists(tmp_filename):
-        
-        # create the figure
-        traces = []
-        traces.append(
-            go.Scatter(
-                x=data['Expiry'], 
-                y=data['Rate'],
-                mode="lines"
-            )
-        )
-        fig = go.Figure()
-        _ = [fig.add_trace(trace) for trace in traces]
-    
-        last_reported_date = arrow.get(data['Date'].loc[0])
-        title=f"FRED Yield Curve {last_reported_date.format('YYYY-MM-DD')}"
-        fig.update_layout(
-            autosize=False,
-            width=800,
-            height=600,
-            title =title,
-            template="plotly_dark",
-            xaxis_title="Time to Maturity",
-            yaxis_title="Yield (%)"
-        )
-        
-        print("new image created")
-        # save the figure
-        fig.write_image(tmp_filename)
-
+    # if update == True then create it
+    # if update == False AND the graph file does not exists, then create it
+    if update or (not update and not os.path.exists(tmp_filename)):
+        create_figure(data, tmp_filename)       
+ 
     # send the figure
     figure = open(tmp_filename, 'rb')
     bot.send_photo(message.chat.id, figure)

@@ -5,6 +5,8 @@ Retrieve yield data from FRED through a Telegram bot.
 This is a simple Telegram bot that responds to the following commands:
 - yield  - this returns a table of the most recent yield rates
 - curve  - shows the yield curve on the most recent rates
+- spread - shows the spread graph between two maturities, optionally takes an number value for months to plot. For example, /spread 2y 10y 36 plots the difference between the 2 and 10 year going back 36 months. If the month is not provided, the default is 12.
+
 
 Example response for the table:
 
@@ -13,6 +15,10 @@ Example response for the table:
 Example response for the yield curve:
 
 <img src="./media/graph.jpg" width="25%">
+
+Example response for the spread curve:
+
+<img src="./media/spread.jpg" width="25%">
 
 ## Setup
 

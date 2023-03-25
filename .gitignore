@@ -102,7 +102,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -136,3 +135,6 @@ notes.txt
 .env
 Scripts
 Lib
+share
+.ipynb_checkpoints
+*.ipynb
