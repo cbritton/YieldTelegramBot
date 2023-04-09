@@ -90,7 +90,7 @@ def get_yields(message):
 def get_curve(message):
     '''Bot response handler to return the curve image.'''
     # crate a filename for saving
-    tmp_filename = f"images/yc.png"
+    tmp_filename = r"images/yc.png"
 
     # get the data and update indicator
     data, update = get_yields_data(data_content)

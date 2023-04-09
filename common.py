@@ -12,6 +12,11 @@ yield_ids = ['DGS1MO','DGS3MO','DGS6MO','DGS1','DGS2','DGS3','DGS5', 'DGS7','DGS
 row_names = ['1 Month', '3 Month', '6 Month', '1 Year', '2 Year', '3 Year', '5 Year', '7 Year', '10 Year', '20 Year', '30 Year']
 shorthand_names = ['1m', '3m', '6m', '1y', '2y', '3y', '5y', '7y', '10y', '20y', '30y']
 
+def remove_curve_graph(filename):
+    '''Remove a file'''
+    file = pathlib.Path(filename)
+    file.unlink()
+
 
 def fetch_yield_data(start_date, end_date):
     '''Get the yield curve data from FRED'''
@@ -75,6 +80,8 @@ def get_yields_data(data_content: DataContent):
         end_date = arrow.now()
         start_date = end_date.shift(days=-5)
         data_content.df_yields = fetch_yield_data(start_date, end_date)
+        # remove the yield curve graph if it exists
+        remove_curve_graph(r"images/yc.png")
         update = True
     
     return data_content.df_yields, update
