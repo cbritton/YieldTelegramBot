@@ -14,8 +14,11 @@ shorthand_names = ['1m', '3m', '6m', '1y', '2y', '3y', '5y', '7y', '10y', '20y',
 
 def remove_curve_graph(filename):
     '''Remove a file'''
-    file = pathlib.Path(filename)
-    file.unlink()
+    try:
+        file = pathlib.Path(filename)
+        file.unlink()
+    except:
+        pass
 
 
 def fetch_yield_data(start_date, end_date):
