@@ -164,7 +164,7 @@ def compute_recommendation(ticker):
                 if call_mid is not None and put_mid is not None:
                     straddle = (call_mid + put_mid)
                     message = f"date: {exp_date}, SELL: call strike: {call_strike} @ call mid: {call_mid}"
-                    atm_content.append(dict(message=message, call_mid=call_mid))
+                    atm_content.append(dict(exp_date=exp_date, strike=call_strike, message=message, call_mid=call_mid))
 
             if i == 1:
                 call_bid = calls.loc[call_idx, 'bid']
@@ -182,7 +182,7 @@ def compute_recommendation(ticker):
 
                 if call_mid is not None:
                     message = f"date: {exp_date}, BUY: call strike: {call_strike} @ call mid: {call_mid}"
-                    atm_content.append(dict(message=message, call_mid=call_mid))
+                    atm_content.append(dict(exp_date=exp_date, strike=call_strike, message=message, call_mid=call_mid))
 
             i += 1
         if not atm_iv:
@@ -209,6 +209,7 @@ def compute_recommendation(ticker):
         expected_move = str(round(straddle / underlying_price * 100,2)) + "%" if straddle else None
 
         return {'sell': atm_content[0]['message'], 'sell_mid': atm_content[0]['call_mid'], 'buy': atm_content[1]['message'], 'buy_mid':  atm_content[1]['call_mid'],
+        'sell_exp_date': atm_content[0]['exp_date'], 'buy_exp_date': atm_content[1]['exp_date'], 'sell_strike': atm_content[0]['strike'], 'buy_strike': atm_content[1]['strike'],
         'avg_volume': avg_volume >= 1500000, 'iv30_rv30': iv30_rv30 >= 1.25, 'ts_slope_0_45': ts_slope_0_45 <= -0.00406, 'expected_move': expected_move} #Check that they are in our desired range (see video)
     except Exception as e:
         #raise Exception(f'Error occured processing')
@@ -216,7 +217,6 @@ def compute_recommendation(ticker):
         
 
 def cal_spread(symbol):
-    print(f"Symbol:          {symbol.upper()}")
     try:
         result = compute_recommendation(symbol)
         if type(result) is str:
@@ -228,19 +228,26 @@ def cal_spread(symbol):
             expected_move      = result['expected_move']
             sell_message       = result['sell']
             buy_message        = result['buy']
+            sell_exp_date      = result['sell_exp_date']
+            buy_exp_date       = result['buy_exp_date']
+            sell_strike        = result['sell_strike']
+            buy_strike         = result['buy_strike']
             entry_cost         = (result['buy_mid'] - result['sell_mid'])*100
 
             content = []
-            content.append("| Field            | Value |")
-            content.append("|------------------|------------------------------------|")
-            content.append(f"| buy option       | {buy_message} |")
-            content.append(f"| sell option      | {sell_message} |")
-            content.append(f"| calendar spread  | {entry_cost:.2f} per contract |")
-            content.append(f"| avg_volume       | {'PASS' if avg_volume_bool else 'FAIL'} |")
-            content.append(f"| iv30_rv30        | {'PASS' if iv30_rv30_bool else 'FAIL'} |")
-            content.append(f"| ts_slope_0_45    | {'PASS' if ts_slope_bool else 'FAIL'} |")
-            content.append(f"| Expected Move    | {expected_move} |")
-            content.append("|------------------|------------------------------------|")
+            content.append("| Field         | Value      |")
+            content.append("|---------------|------------|")
+            content.append(f"| symbol        | {symbol.upper():<10} |")
+            content.append(f"| buy strike    | {buy_strike:<10} |")
+            content.append(f"| buy expiry    | {buy_exp_date:<10} |")
+            content.append(f"| sell strike   | {sell_strike:<10} |")
+            content.append(f"| sell expiry   | {sell_exp_date:<10} |")
+            content.append(f"| cost          | {entry_cost:<10.2f} |")
+            content.append(f"| avg_volume    | {'PASS' if avg_volume_bool else 'FAIL':<10} |")
+            content.append(f"| iv30_rv30     | {'PASS' if iv30_rv30_bool else 'FAIL':<10} |")
+            content.append(f"| ts_slope_0_45 | {'PASS' if ts_slope_bool else 'FAIL':<10} |")
+            content.append(f"| Expected Move | {expected_move:<10} |")
+            content.append("|---------------|------------|")
             return ("\n".join(content), None)
     except Exception as e:
         return (None, f'{e}')
