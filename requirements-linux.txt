@@ -8,3 +8,5 @@ python-dotenv
 tabulate
 pyarrow
 fastparquet
+scipy
+numpy

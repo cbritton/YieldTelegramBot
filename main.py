@@ -9,7 +9,7 @@ from common import get_yield_spread
 from common import create_spread_figure
 from config import data_content
 from config import telegram_bot_key
-
+from call_spread import cal_spread
 
 bot = telebot.TeleBot(telegram_bot_key)
 
@@ -86,6 +86,26 @@ def get_yields(message):
         parse_mode='HTML'
     )
 
+@bot.message_handler(commands=["caltrade"])
+def get_yields(message):
+    '''Bot response handler to print the calendar spread trade information.'''
+    if len(request) < 3:
+        response = f"Incomplete request. Format: '/caltrade S' where S is a ticker symbol, i.e. AAPL."
+        bot.send_message( message.chat.id, response)
+    else:
+        symbol = request[1]
+        content, error = cal_spread(symbol)
+        if content is not None:
+            bot.send_message(
+                message.chat.id, f'''<pre>{content}</pre>''', 
+                parse_mode='HTML'
+            )
+        else:
+            bot.send_message(
+                message.chat.id, f'''<pre>{error}</pre>''',
+                parse_mode='HTML'
+            )
+
 @bot.message_handler(commands=["curve"])
 def get_curve(message):
     '''Bot response handler to return the curve image.'''
@@ -106,4 +126,7 @@ def get_curve(message):
 
 
 print("Ready.")
-bot.polling()
+try:
+    bot.polling()
+except:
+    pass
