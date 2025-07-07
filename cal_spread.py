@@ -225,14 +225,47 @@ def cal_spread(symbol):
             avg_volume_bool    = result['avg_volume']
             iv30_rv30_bool     = result['iv30_rv30']
             ts_slope_bool      = result['ts_slope_0_45']
-            expected_move      = result['expected_move']
+            if 'expected_move' in result.keys() and result['expected_move'] is not None:
+                expected_move      = result['expected_move']
+            else:
+                expected_move      = ""
             sell_message       = result['sell']
             buy_message        = result['buy']
-            sell_exp_date      = result['sell_exp_date']
-            buy_exp_date       = result['buy_exp_date']
-            sell_strike        = result['sell_strike']
-            buy_strike         = result['buy_strike']
-            entry_cost         = (result['buy_mid'] - result['sell_mid'])*100
+            
+            if 'sell_exp_date' in result.keys():
+                sell_exp_date      = result['sell_exp_date']
+            else:
+                sell_exp_date      = ""
+            
+            if 'buy_exp_date' in result.keys():
+                buy_exp_date       = result['buy_exp_date']
+            else:
+                buy_exp_date       = ""
+            
+            if 'sell_strike' in result.keys():
+                sell_strike        = result['sell_strike']
+            else:
+                sell_strike        = ""
+            
+            if 'buy_strike' in result.keys():
+                buy_strike         = result['buy_strike']
+            else:
+                buy_strike         = ""
+            
+            if 'buy_mid' in result.keys():
+                buy_mid            = result['buy_mid']
+            else:
+                buy_mid            = None
+            
+            if 'sell_mid' in result.keys():
+                sell_mid           = result['sell_mid']
+            else:
+                sell_mid           = None
+            
+            if buy_mid is not None and sell_mid is not None:
+                entry_cost         = (buy_mid - sell_mid) * 100
+            else:
+                entry_cost         = 0.0
 
             content = []
             content.append("| Field         | Value      |")
@@ -250,4 +283,6 @@ def cal_spread(symbol):
             content.append("|---------------|------------|")
             return ("\n".join(content), None)
     except Exception as e:
+        print("Exception in caltrade:")
+        print(e)
         return (None, f'{e}')

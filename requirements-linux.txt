@@ -10,3 +10,4 @@ pyarrow
 fastparquet
 scipy
 numpy
+click
