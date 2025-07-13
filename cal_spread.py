@@ -89,6 +89,7 @@ def get_current_price(ticker):
     return todays_data['Close'][0]
 
 def compute_recommendation(ticker):
+    earnings_date = None
     try:
         ticker = ticker.strip().upper()
         if not ticker:
@@ -98,6 +99,13 @@ def compute_recommendation(ticker):
             stock = yf.Ticker(ticker)
             if len(stock.options) == 0:
                 raise KeyError()
+
+            calendar = stock.calendar
+
+            if calendar is not None and 'Earnings Date' in calendar:
+                earnings_date = calendar['Earnings Date'][0]
+            else:
+                print("empty calendar")
         except KeyError:
             return f"Error: No options found for stock symbol '{ticker}'."
         except Exception as ex:
@@ -209,12 +217,84 @@ def compute_recommendation(ticker):
         expected_move = str(round(straddle / underlying_price * 100,2)) + "%" if straddle else None
 
         return {'sell': atm_content[0]['message'], 'sell_mid': atm_content[0]['call_mid'], 'buy': atm_content[1]['message'], 'buy_mid':  atm_content[1]['call_mid'],
+            "earnings_date":earnings_date,
         'sell_exp_date': atm_content[0]['exp_date'], 'buy_exp_date': atm_content[1]['exp_date'], 'sell_strike': atm_content[0]['strike'], 'buy_strike': atm_content[1]['strike'],
         'avg_volume': avg_volume >= 1500000, 'iv30_rv30': iv30_rv30 >= 1.25, 'ts_slope_0_45': ts_slope_0_45 <= -0.00406, 'expected_move': expected_move} #Check that they are in our desired range (see video)
     except Exception as e:
         #raise Exception(f'Error occured processing')
         raise e
-        
+  
+def cal_spread_dict(symbol):
+    try:
+        result = compute_recommendation(symbol)
+        if type(result) is str:
+            return (None, result)
+        else:
+            avg_volume_bool    = result['avg_volume']
+            iv30_rv30_bool     = result['iv30_rv30']
+            ts_slope_bool      = result['ts_slope_0_45']
+            if 'expected_move' in result.keys() and result['expected_move'] is not None:
+                expected_move      = result['expected_move']
+            else:
+                expected_move      = ""
+            sell_message       = result['sell']
+            buy_message        = result['buy']
+            earnings_date      = result['earnings_date']
+            
+            if 'sell_exp_date' in result.keys():
+                sell_exp_date      = result['sell_exp_date']
+            else:
+                sell_exp_date      = ""
+            
+            if 'buy_exp_date' in result.keys():
+                buy_exp_date       = result['buy_exp_date']
+            else:
+                buy_exp_date       = ""
+            
+            if 'sell_strike' in result.keys():
+                sell_strike        = result['sell_strike']
+            else:
+                sell_strike        = ""
+            
+            if 'buy_strike' in result.keys():
+                buy_strike         = result['buy_strike']
+            else:
+                buy_strike         = ""
+            
+            if 'buy_mid' in result.keys():
+                buy_mid            = result['buy_mid']
+            else:
+                buy_mid            = None
+            
+            if 'sell_mid' in result.keys():
+                sell_mid           = result['sell_mid']
+            else:
+                sell_mid           = None
+            
+            if buy_mid is not None and sell_mid is not None:
+                entry_cost         = (buy_mid - sell_mid) * 100
+            else:
+                entry_cost         = 0.0
+
+            content = {}
+            content["symbol"] = symbol.upper()
+            content["earnings"] = earnings_date
+            content["buy strike"] = buy_strike
+            content["buy expiry"] = buy_exp_date
+            content["sell strike"] =sell_strike
+            content["sell expiry"] = sell_exp_date
+            content["cost"] = f"{entry_cost:<10.2f}"
+            content["avg_volume"] = 'PASS' if avg_volume_bool else 'FAIL'
+            content["iv30_rv30"] =  'PASS' if iv30_rv30_bool else 'FAIL'
+            content["ts_slope_0_45"] = 'PASS' if ts_slope_bool else 'FAIL'
+            content["Expected Move"] = expected_move
+            return (content, None)
+    except Exception as e:
+        #print("Exception in caltrade:")
+        #print(e)
+        return (None, f'{e}')
+
+
 
 def cal_spread(symbol):
     try:
@@ -231,6 +311,7 @@ def cal_spread(symbol):
                 expected_move      = ""
             sell_message       = result['sell']
             buy_message        = result['buy']
+            earnings_date      = result['earnings_date']
             
             if 'sell_exp_date' in result.keys():
                 sell_exp_date      = result['sell_exp_date']
@@ -271,6 +352,7 @@ def cal_spread(symbol):
             content.append("| Field         | Value      |")
             content.append("|---------------|------------|")
             content.append(f"| symbol        | {symbol.upper():<10} |")
+            content.append(f"| earnings      | {earning_date:<10} |")
             content.append(f"| buy strike    | {buy_strike:<10} |")
             content.append(f"| buy expiry    | {buy_exp_date:<10} |")
             content.append(f"| sell strike   | {sell_strike:<10} |")

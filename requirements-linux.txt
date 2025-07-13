@@ -11,3 +11,6 @@ fastparquet
 scipy
 numpy
 click
+polars
+yfinance
+tqdm
