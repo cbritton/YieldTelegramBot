@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from scipy.interpolate import interp1d
 import numpy as np
 import warnings
+import arrow
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 def filter_dates(dates):
@@ -216,8 +217,13 @@ def compute_recommendation(ticker):
 
         expected_move = str(round(straddle / underlying_price * 100,2)) + "%" if straddle else None
 
+        if earnings_date is None:
+            earnings_date = ""
+        else:
+            earnings_date = arrow.get(earnings_date).format("YYYY-MM-DD")
+
         return {'sell': atm_content[0]['message'], 'sell_mid': atm_content[0]['call_mid'], 'buy': atm_content[1]['message'], 'buy_mid':  atm_content[1]['call_mid'],
-            "earnings_date":earnings_date,
+            "earnings_date": earnings_date,
         'sell_exp_date': atm_content[0]['exp_date'], 'buy_exp_date': atm_content[1]['exp_date'], 'sell_strike': atm_content[0]['strike'], 'buy_strike': atm_content[1]['strike'],
         'avg_volume': avg_volume >= 1500000, 'iv30_rv30': iv30_rv30 >= 1.25, 'ts_slope_0_45': ts_slope_0_45 <= -0.00406, 'expected_move': expected_move} #Check that they are in our desired range (see video)
     except Exception as e:
@@ -311,7 +317,12 @@ def cal_spread(symbol):
                 expected_move      = ""
             sell_message       = result['sell']
             buy_message        = result['buy']
-            earnings_date      = result['earnings_date']
+
+            if 'earnings_date' in result.keys():
+                earnings_date      = result['earnings_date']
+            else:
+                earnings_date      = " "
+
             
             if 'sell_exp_date' in result.keys():
                 sell_exp_date      = result['sell_exp_date']
@@ -352,7 +363,7 @@ def cal_spread(symbol):
             content.append("| Field         | Value      |")
             content.append("|---------------|------------|")
             content.append(f"| symbol        | {symbol.upper():<10} |")
-            content.append(f"| earnings      | {earning_date:<10} |")
+            content.append(f"| earnings      | {earnings_date:<10} |")
             content.append(f"| buy strike    | {buy_strike:<10} |")
             content.append(f"| buy expiry    | {buy_exp_date:<10} |")
             content.append(f"| sell strike   | {sell_strike:<10} |")
