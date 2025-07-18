@@ -136,7 +136,7 @@ def compute_recommendation(ticker):
         if earnings_date is None:
             earnings_date = ""
         else:
-            earnings_date = arrow.get(earnings_date).format("YYYY-MM-DD")
+            earnings_date = arrow.get(earnings_date)
 
         today = arrow.now().format("YYYY-MM-DD")
         tomorrow = arrow.now().shift(days=1).format("YYYY-MM-DD")
@@ -144,7 +144,9 @@ def compute_recommendation(ticker):
         for exp_date, chain in options_chains.items():
             # the first expiration must be the first one after the earnings date
             expiration_date = arrow.get(exp_date)
-            if expiration_date < arrow.get(earnings_date):
+            if earnings_date is None:
+                pass
+            elif expiration_date < earnings_date:
                 continue
 
             calls = chain.calls
@@ -229,6 +231,11 @@ def compute_recommendation(ticker):
         avg_volume = price_history['Volume'].rolling(30).mean().dropna().iloc[-1]
 
         expected_move = str(round(straddle / underlying_price * 100,2)) + "%" if straddle else None
+
+        if earnings_date is None:
+            earnings_date = ""
+        else:
+            earnings_date = earnings_date.format("YYYY-MM-DD")
 
         return {'sell': atm_content[0]['message'], 'sell_mid': atm_content[0]['call_mid'], 'buy': atm_content[1]['message'], 'buy_mid':  atm_content[1]['call_mid'],
             "earnings_date": earnings_date,
